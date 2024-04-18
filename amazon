@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Amazon Profits</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .bar {
+            fill: lightblue;
+        }
+        .bar:hover {
+            fill: lightgrey;
+        }
+        .chart-title {
+            font-size: 2em;
+        }
+    </style>
+</head>
+<body>
+    <div id="chart"></div>
+    <script>
+        // Load the CSV file
+        d3.csv("amazon-profits.csv", function(d) {
+            return {
+                year: d.Year,
+                grossProfit: +d.Gross_Profit.replace(/[\$,]/g, ''),
+                cogs: +d.COGS.replace(/[\$,]/g, ''),
+                netProfitPercentage: ((d.Gross_Profit.replace(/[\$,]/g, '') - d.COGS.replace(/[\$,]/g, '')) / d.Gross_Profit.replace(/[\$,]/g, '') * 100)
+            };
+        }).then(function(data) {
+            const margin = {top: 20, right: 20, bottom: 30, left: 40},
+                  width = 960 - margin.left - margin.right,
+                  height = 500 - margin.top - margin.bottom;
+
+            const x = d3.scaleBand()
+                        .range([0, width])
+                        .padding(0.1);
+            const y = d3.scaleLinear()
+                        .range([height, 0]);
+
+            const svg = d3.select("#chart").append("svg")
+                          .attr("width", width + margin.left + margin.right)
+                          .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                          .attr("transform",
+                                "translate(" + margin.left + "," + margin.top + ")");
+
+            x.domain(data.map(d => d.year));
+            y.domain([0, d3.max(data, d => d.grossProfit)]);
+
+            svg.selectAll(".bar")
+                .data(data)
+              .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.year))
+                .attr("width", x.bandwidth())
+                .attr("y", d => y(d.grossProfit))
+                .attr("height", d => height - y(d.grossProfit))
+                .on("mouseover", function(event, d) {
+                    d3.select(this).attr("fill", "lightgrey");
+                    // Tooltip code goes here
+                })
+                .on("mouseout", function(d) {
+                    d3.select(this).attr("fill", "lightblue");
+                    // Tooltip hide code goes here
+                });
+
+            svg.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+
+            svg.append("g")
+                .call(d3.axisLeft(y));
+
+            // Add title
+            svg.append("text")
+                .attr("x", (width / 2))             
+                .attr("y", 0 - (margin.top / 2))
+                .attr("text-anchor", "middle")  
+                .style("font-size", "4em") 
+                .text("Amazon Profits " + data[0].year + "-" + data[data.length-1].year);
+        });
+    </script>
+</body>
+</html>
