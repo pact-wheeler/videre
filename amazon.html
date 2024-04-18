@@ -14,20 +14,26 @@
         .chart-title {
             font-size: 2em;
         }
+        #chart svg {
+            display: block; /* Centers the svg horizontally */
+            margin: auto;
+        }
     </style>
 </head>
 <body>
-    <div id="chart"></div>
+    <div style="padding-top: 50px;" id="chart"></div> <!-- Move chart down 50 pixels -->
     <script>
         // Load the CSV file
         d3.csv("amazon-profits.csv", function(d) {
             return {
-                year: d.Year,
+                year: +d.Year, // Convert to numeric
                 grossProfit: +d.Gross_Profit.replace(/[\$,]/g, ''),
                 cogs: +d.COGS.replace(/[\$,]/g, ''),
                 netProfitPercentage: ((d.Gross_Profit.replace(/[\$,]/g, '') - d.COGS.replace(/[\$,]/g, '')) / d.Gross_Profit.replace(/[\$,]/g, '') * 100)
             };
         }).then(function(data) {
+            data.sort((a, b) => a.year - b.year); // Sort data by year in ascending order
+
             const margin = {top: 20, right: 20, bottom: 30, left: 40},
                   width = 960 - margin.left - margin.right,
                   height = 500 - margin.top - margin.bottom;
@@ -46,7 +52,7 @@
                                 "translate(" + margin.left + "," + margin.top + ")");
 
             x.domain(data.map(d => d.year));
-            y.domain([0, d3.max(data, d => d.grossProfit)]);
+            y.domain([0, d3.max(data, d => d.grossProfit) / 1e6]); // Adjust for millions
 
             svg.selectAll(".bar")
                 .data(data)
@@ -54,8 +60,8 @@
                 .attr("class", "bar")
                 .attr("x", d => x(d.year))
                 .attr("width", x.bandwidth())
-                .attr("y", d => y(d.grossProfit))
-                .attr("height", d => height - y(d.grossProfit))
+                .attr("y", d => y(d.grossProfit / 1e6)) // Scale value to millions
+                .attr("height", d => height - y(d.grossProfit / 1e6))
                 .on("mouseover", function(event, d) {
                     d3.select(this).attr("fill", "lightgrey");
                     // Tooltip code goes here
@@ -70,7 +76,7 @@
                 .call(d3.axisBottom(x));
 
             svg.append("g")
-                .call(d3.axisLeft(y));
+                .call(d3.axisLeft(y).tickFormat(d => `${d}M`)); // Display y-axis values as millions
 
             // Add title
             svg.append("text")
