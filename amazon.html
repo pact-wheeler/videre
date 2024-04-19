@@ -19,13 +19,24 @@
             display: flex;
             justify-content: center; /* Center the SVG horizontally */
         }
-        svg {
-            margin-top: 20px; /* Additional spacing from top of the container */
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: 120px;
+            height: 28px;
+            padding: 2px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
         }
     </style>
 </head>
 <body>
     <div id="chart"></div>
+    <div class="tooltip"></div>
     <script>
         // Load the CSV file
         d3.csv("amazon-profits.csv", function(d) {
@@ -33,12 +44,12 @@
                 year: +d.Year,
                 grossProfit: +d.Gross_Profit.replace(/[\$,]/g, '') / 1e6, // Convert directly to millions
                 cogs: +d.COGS.replace(/[\$,]/g, '') / 1e6, // Convert directly to millions
-                netProfitPercentage: ((d.Gross_Profit.replace(/[\$,]/g, '') - d.COGS.replace(/[\$,]/g, '')) / d.Gross_Profit.replace(/[\$,]/g, '') * 100)
+                netProfitPercentage: ((d.Gross_Profit.replace(/[\$,]/g, '') - d.COGS.replace(/[\$,]/g, '')) / d.Gross_Profit.replace(/[\$,]/g, '') * 100).toFixed(2) + '%'
             };
         }).then(function(data) {
             data.sort((a, b) => a.year - b.year); // Sort data by year in ascending order
 
-            const margin = {top: 20, right: 20, bottom: 30, left: 40},
+            const margin = {top: 20, right: 20, bottom: 30, left: 60}, // Adjusted left margin
                   width = 960 - margin.left - margin.right,
                   height = 500 - margin.top - margin.bottom;
 
@@ -58,6 +69,8 @@
             x.domain(data.map(d => d.year));
             y.domain([0, d3.max(data, d => d.grossProfit)]); // Scale is already in millions
 
+            const tooltip = d3.select(".tooltip");
+
             svg.selectAll(".bar")
                 .data(data)
               .enter().append("rect")
@@ -68,11 +81,18 @@
                 .attr("height", d => height - y(d.grossProfit))
                 .on("mouseover", function(event, d) {
                     d3.select(this).attr("fill", "lightgrey");
-                    // Tooltip code goes here
+                    tooltip.transition()
+                           .duration(200)
+                           .style("opacity", .9);
+                    tooltip.html("Net Profit: " + d.netProfitPercentage)
+                           .style("left", (event.pageX) + "px")
+                           .style("top", (event.pageY - 28) + "px");
                 })
                 .on("mouseout", function(d) {
                     d3.select(this).attr("fill", "lightblue");
-                    // Tooltip hide code goes here
+                    tooltip.transition()
+                           .duration(500)
+                           .style("opacity", 0);
                 });
 
             svg.append("g")
@@ -84,7 +104,9 @@
 
             // Add title
             svg.append("text")
-                .attr("x", (width / 2))             
+                .attr
+
+("x", (width / 2))             
                 .attr("y", 0 - (margin.top / 2))
                 .attr("text-anchor", "middle")  
                 .style("font-size", "4em") 
