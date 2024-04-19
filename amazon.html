@@ -22,9 +22,8 @@
         .tooltip {
             position: absolute;
             text-align: center;
-            width: 120px;
-            height: 28px;
-            padding: 2px;
+            width: auto;
+            padding: 10px;
             font: 12px sans-serif;
             background: lightsteelblue;
             border: 0px;
@@ -84,8 +83,8 @@
                     tooltip.transition()
                            .duration(200)
                            .style("opacity", .9);
-                    tooltip.html("Net Profit: " + d.netProfitPercentage)
-                           .style("left", (event.pageX) + "px")
+                    tooltip.html("Year: " + d.year + "<br/>Net Profit: " + d.netProfitPercentage + "<br/>Gross Profit: $" + d3.format(",.2f")(d.grossProfit) + "M")
+                           .style("left", (event.pageX + 10) + "px")
                            .style("top", (event.pageY - 28) + "px");
                 })
                 .on("mouseout", function(d) {
@@ -100,13 +99,13 @@
                 .call(d3.axisBottom(x));
 
             svg.append("g")
-                .call(d3.axisLeft(y).tickFormat(d => `${d}M`)); // Display y-axis values as millions
+                .call(d3.axisLeft(y).tickFormat(d3.format(",.2f"))); // Display y-axis values as millions with thousands separators
 
             // Add title
-            svg.append("text")
-                .attr
+            svg.append("
 
-("x", (width / 2))             
+text")
+                .attr("x", (width / 2))             
                 .attr("y", 0 - (margin.top / 2))
                 .attr("text-anchor", "middle")  
                 .style("font-size", "4em") 
